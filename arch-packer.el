@@ -219,8 +219,8 @@
           (when (string= (cdr (assoc 'name out)) (cdr (assoc 'Name pkg-alist)))
             (let ((Latest `(Latest . ,(cdr (assoc 'latest out)))))
               (push Latest pkg-alist)
-              (setq outdated (delete out outdated))
-              (return))))
+              (setq outdated (delete out outdated)))))
+              ;; INFO: Removed (return) call to avoid errors
         (unless (cdr (assoc 'Latest pkg-alist))
           (push `(Latest . ,(cdr (assoc 'Version pkg-alist))) pkg-alist))
         (push pkg-alist result)))
@@ -321,8 +321,12 @@
   "Generate package menu asynchronously."
   (async-start
    (lambda ()
+     ;; INFO: async processes are executed in a child Emacs process that requires load-path to be set properly and packages loaded to use their functions
      (require 'package)
      (package-initialize)
+     (dolist (dependency '("arch-packer" "s" "dash"))
+       (setq dependency (expand-file-name (concat user-emacs-directory "straight/build/" dependency))) ; Here,`straight-base-dir' is assumed to be `user-emacs-directory'
+       (add-to-list 'load-path dependency))
      (require 'arch-packer)
      (arch-packer-get-package-alist))
    (lambda (result)
@@ -387,7 +391,8 @@
        ((string-match "\\[sudo\\] password for" output)
         (arch-packer-disable-status-reporter)
         (arch-packer-send-root)
-        (arch-packer-enable-status-reporter)
+        ;; INFO: Remove call to `arch-packer-enable-status-reporter' to avoid bugs that prompted twice to enter sudo password
+        ;; after calling `arch-packer-list-packages'
         (arch-packer-wait-shell-subprocess)
         (arch-packer-get-exit-status))
        (t
@@ -406,8 +411,9 @@
 
 (defun arch-packer-call-shell-process (proc string)
   "Send arch-packer shell-process PROC the contents of STRING as input."
-  (process-send-string proc (concat string "\n"))
-  (arch-packer-enable-status-reporter))
+  ;; INFO: Remove call to `arch-packer-enable-status-reporter' to avoid bugs that prompted twice to enter sudo password
+  ;; after calling `arch-packer-list-packages'
+  (process-send-string proc (concat string "\n")))
 
 (defun arch-packer-send-root ()
   "Prompt user for root password and send it to arch-packer-process."
@@ -419,7 +425,7 @@
         (ignore-errors (kill-process arch-packer-process-name))
         (abort-recursive-edit)))
     (let ((minibuffer-local-map map)
-          (passwd (read-passwd "Password: ")))
+          (passwd (read-passwd "[sudo] password: ")))
       (arch-packer-call-shell-process arch-packer-process-name passwd)
       (clear-string passwd))))
 
@@ -531,7 +537,6 @@
             (remove "" (split-string (shell-command-to-string (concat arch-packer-default-command
                                                                       " -Qu"))
                                      "\n")))))
-  
 ;;;;;;;;;;;;;;;;;;
 ;;; Interaction
 
