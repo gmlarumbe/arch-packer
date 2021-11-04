@@ -250,7 +250,7 @@
   (setq tabulated-list-format
         `[("Package" ,arch-packer-column-width-package nil)
           ("Version" ,arch-packer-column-width-version nil)
-          ("Repository" ,arch-packer-repository-column-width-version nil) 
+          ("Repository" ,arch-packer-repository-column-width-version nil)
           ("Description" 0 nil)])
   (setq tabulated-list-padding 2)
   (tabulated-list-init-header))
@@ -302,7 +302,7 @@
                    (offset (point))
                    pkg-alist)
               (forward-line)
-              (push `(Description . ,(s-trim (substring-no-properties (buffer-string) offset (line-end-position)))) pkg-alist) 
+              (push `(Description . ,(s-trim (substring-no-properties (buffer-string) offset (line-end-position)))) pkg-alist)
               (push `(Repository . ,repo) pkg-alist)
               (push `(Name . ,name) pkg-alist)
               (push `(Version . ,(s-trim version)) pkg-alist)
