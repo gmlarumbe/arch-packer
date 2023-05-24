@@ -110,6 +110,17 @@
   :type 'face
   :group 'arch-packer)
 
+;; INFO: Move variables to the beginning to remove compiler warnings
+(defvar arch-packer-process-buffer "*Pacman-Packages*"
+  "Buffer name for arch-packer process buffers.")
+
+(defvar arch-packer-process-output nil
+  "Holds output of last command executed by subprocess.")
+
+(defvar arch-packer-process-output-buffer "*arch-packer-output*"
+  "Buffer that displays subprocess output.")
+;; End of INFO
+
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Package menu mode
 
@@ -311,7 +322,7 @@
     result))
 
 (defun arch-packer-search-pkg (search-string)
-  "Search for packages using SEARCH-STRING"
+  "Search for packages using SEARCH-STRING."
   (shell-command-to-string
    (concat arch-packer-default-command
            " -Ss "
@@ -337,15 +348,6 @@
 
 (defvar arch-packer-process-name "arch-packer-process"
   "Process name for arch-packer processes.")
-
-(defvar arch-packer-process-buffer "*Pacman-Packages*"
-  "Buffer name for arch-packer process buffers.")
-
-(defvar arch-packer-process-output nil
-  "Holds output of last command executed by subprocess.")
-
-(defvar arch-packer-process-output-buffer "*arch-packer-output*"
-  "Buffer that displays subprocess output.")
 
 (defvar arch-packer-no-shell-history "; history -d $((HISTCMD-1))"
   "Prevents arch-packer shell commands from being appended to history.")
@@ -373,13 +375,14 @@
       (accept-process-output proc 0.1))))
 
 (defun arch-packer-process-filter (proc output)
-  "Filter for arch-packer-process PROC."
+  "Filter for arch-packer-process PROC.
+Insert OUTPUT."
   (let ((buf (process-buffer proc)))
     (with-current-buffer buf
       (cond
        ((string-match "Pacman error\n" output)
         (arch-packer-disable-status-reporter)
-        (message arch-packer-subprocess-output))
+        (message arch-packer-process-output))
        ((string-match "Pacman finished\n" output)
         (if arch-packer-search-string
             (and
@@ -397,7 +400,7 @@
         (arch-packer-get-exit-status))
        (t
         (unless (string-match "^\\[" output)
-          (and (setq arch-packer-subprocess-output output)
+          (and (setq arch-packer-process-output output)
                (with-current-buffer (arch-packer-get-output-buffer-create)
                    (if (get-buffer-window buf)
                        (set-window-point (get-buffer-window buf) (point-max))
@@ -458,7 +461,8 @@
    (add-hook 'post-command-hook 'arch-packer-status-reporter)))
 
 (defun arch-packer-status-reporter ()
-  "Status indicator is shown in the echo area while arch-packer shell process alive."
+  "Status reporter.
+Status indicator is shown in the echo area while arch-packer shell process alive."
   (unless (or (not (arch-packer-shell-process-live-p))
               (active-minibuffer-window))
     (let ((progress-reporter (make-progress-reporter "Pacman processing...")))
@@ -684,7 +688,7 @@
     (if (string= major-mode "arch-packer-search-mode")
         (let ((pkg (save-excursion
                      (beginning-of-line-text)
-                     (word-at-point))))
+                     (thing-at-point 'word :no-props))))
           (when (yes-or-no-p (format "Install package %s ?" pkg))
             (arch-packer-upgrade-package (s-trim pkg))))
       (let ((pkg (read-from-minibuffer "Enter package name: ")))
