@@ -588,7 +588,8 @@ Status indicator is shown in the echo area while arch-packer shell process alive
                (beginning-of-line-text)
                (tabulated-list-get-id))))
     (if (and (string= major-mode "arch-packer-search-mode")
-             (string= arch-packer-default-command "pacaur"))
+             (or (string= arch-packer-default-command "pacaur")
+                 (string= arch-packer-default-command "paru")))
         (async-shell-command (concat arch-packer-default-command " -Si " pkg) buf)
       (save-excursion
         (beginning-of-line-text)
