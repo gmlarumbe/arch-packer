@@ -331,15 +331,12 @@
 (defun arch-packer-pkg-menu-async ()
   "Generate package menu asynchronously."
   (async-start
-   (lambda ()
-     ;; INFO: async processes are executed in a child Emacs process that requires load-path to be set properly and packages loaded to use their functions
-     (require 'package)
-     (package-initialize)
-     (dolist (dependency '("arch-packer" "s" "dash"))
-       (setq dependency (expand-file-name (concat user-emacs-directory "straight/build/" dependency))) ; Here,`straight-base-dir' is assumed to be `user-emacs-directory'
-       (add-to-list 'load-path dependency))
-     (require 'arch-packer)
-     (arch-packer-get-package-alist))
+   `(lambda ()
+      ;; INFO: async processes are executed in a child Emacs process that
+      ;; requires load-path to be set properly and packages loaded to use their functions
+      ,(async-inject-variables "\\`\\(load-path\\|arch-packer-\\)")
+      (require 'arch-packer)
+      (arch-packer-get-package-alist))
    (lambda (result)
      (arch-packer-generate-menu result))))
 
