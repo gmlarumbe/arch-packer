@@ -552,7 +552,9 @@ Status indicator is shown in the echo area while arch-packer shell process alive
   (save-excursion
     (beginning-of-line-text)
     (unless (string= (aref (tabulated-list-get-entry) 1) (aref (tabulated-list-get-entry) 2))
-      (tabulated-list-put-tag "U" t))))
+      (tabulated-list-put-tag "U" t)))
+  (forward-line)
+  (beginning-of-line))
 
 (defun arch-packer-menu-mark-delete ()
   "Mark package for deletion and move to the next line."
@@ -570,8 +572,7 @@ Status indicator is shown in the echo area while arch-packer shell process alive
   (save-excursion
     (goto-char (point-min))
     (while (not (eobp))
-      (arch-packer-menu-mark-upgrade)
-      (forward-line))))
+      (arch-packer-menu-mark-upgrade))))
 
 (defun arch-packer-menu-visit-homepage ()
   "Browse provided URL."
